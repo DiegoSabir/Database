@@ -1,0 +1,27 @@
+Formas Normales:
+1FN --> Tiene una clave primaria
+2FN --> Si tienen dos claves primarias, los atributos deben estar relacionados) 
+3FN --> Si hay transitividad entre no primos no se cumple. (ejemplo: ciudad, barrio, calle = CP)
+FNBC --> Si hay transitivad entre primos con no primos no se cumple. (NIF(CS) = Nombre, Apellidos)
+------------------------
+Relaciones
+(1,N) + (1,N) = N:M
+Las claves primarias de las entidades pasan a ser primarias y foraneas de la relacion.
+(1,1) + (1,N) = 1:N
+La clave primaria de la entidad mayor pasa a ser primaria y foranea.
+(1,1) + (1,1) =  1:1
+Las claves primarias de las entidades pasan a ser primarias y foraneas de la relacion. (Aunque la mejor opcion es añadir una claveprimaria propia)
+---------------------------
+Debilidad(Suele estar en la cardinalidad (1,1))
+ID:La clave primaria de la debil pasa a la siguiente como Primaria y Foranea.
+EX:La clave primaria de la debil pasa a la siguiente como Primaria.
+-----------------------------
+Bidireccionalidad:
+Hay  bidireccionalidad cuando solo hay una misma clave principal en una diferente entidad-relacion. Ejemplo:
+
+	Nota:Cuando una cardinalidad son diferentes la principal es la mayor y la otra es foranea.
+(1,N)
+Amarre(Numero[CP], Luz, Mantenimeinto)
+	esta(Numero[CP], Letra[CF])
+Zona(Letra[CP], Tipo, Profundidad)
+(1,1)
