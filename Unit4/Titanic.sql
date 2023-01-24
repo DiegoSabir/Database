@@ -1,3 +1,12 @@
+#-------------------------------------------------------------------------------------------------------------------
+#	CREACIÓN DE LA BASE DE DATOS 'Titanic'
+#-------------------------------------------------------------------------------------------------------------------
+DROP DATABASE IF EXISTS Titanic;
+CREATE DATABASE IF NOT EXISTS Titanic;
+USE Titanic;
+#-------------------------------------------------------------------------------------------------------------------
+#	CREACIÓN DE LA TABLA -> copia la estructura inicial de la tabla (llamada 'mytable')
+#-------------------------------------------------------------------------------------------------------------------
 CREATE TABLE `mytable` (
   `PassengerId` BIGINT,
   `Survived` BIGINT,
@@ -12,8 +21,10 @@ CREATE TABLE `mytable` (
   `Cabin` VARCHAR(1024),
   `Embarked` VARCHAR(1024)
 );
-
-INSERT INTO `mytable` VALUES
+#-------------------------------------------------------------------------------------------------------------------
+#	INSERCIÓN DE LOS REGISTROS -> copia el INSERT en su totalidad.
+#-------------------------------------------------------------------------------------------------------------------
+INSERT INTO `mytable` VALUES 
 (1,0,3,'Braund, Mr. Owen Harris','male','22',1,0,'A/5 21171','7.25','','S'),
 (2,1,1,'Cumings, Mrs. John Bradley (Florence Briggs Thayer)','female','38',1,0,'PC 17599','71.2833','C85','C'),
 (3,1,3,'Heikkinen, Miss. Laina','female','26',0,0,'STON/O2. 3101282','7.925','','S'),
@@ -905,3 +916,172 @@ INSERT INTO `mytable` VALUES
 (889,0,3,'Johnston, Miss. Catherine Helen "Carrie"','female','',1,2,'W./C. 6607','23.45','','S'),
 (890,1,1,'Behr, Mr. Karl Howell','male','26',0,0,'111369','30','C148','C'),
 (891,0,3,'Dooley, Mr. Patrick','male','32',0,0,'370376','7.75','','Q');
+#-------------------------------------------------------------------------------------------------------------------
+#	MODIFICACIÓN DEL NOMBRE DE LA TABLA POR Titanic_Datos
+#-------------------------------------------------------------------------------------------------------------------
+ALTER TABLE mytable
+	RENAME TO Titanic_Datos;
+#-------------------------------------------------------------------------------------------------------------------
+#	MODIFICACIÓN DE LOS ELEMENTOS DE LA TABLA
+#-------------------------------------------------------------------------------------------------------------------
+#	`PassengerId` BIGINT	->	idPasajero	INT
+#  	`Survived` BIGINT,		->	Sobrevivió	INT
+#  	`Pclass` BIGINT,		->	Clase		CHAR
+#  	`Name` VARCHAR(1024),	->	Nombre		VARCHAR( 100 )
+#  	`Sex` VARCHAR(1024),	->	Sexo		VARCHAR( 10 )
+#	`Age` VARCHAR(1024),	->	Edad		VARCHAR( 4 )
+#  	`SibSp` BIGINT,			->	Familiares	INT
+#  	`Parch` BIGINT,			->	PadresHijos	INT
+# 	`Ticket` VARCHAR(1024),	->	idTicket	VARCHAR( 50 )
+# 	`Fare` VARCHAR(1024),	->	Tarifa		VARCHAR( 8 )
+# 	`Cabin` VARCHAR(1024),	->	idCabina	VARCHAR( 20 )
+#  	`Embarked` VARCHAR(1024)->	Embarque	VARCHAR( 20 )
+
+#-------------------------------------------------------------------------------------------------------------------
+ALTER TABLE Titanic_Datos
+	CHANGE COLUMN PassengerId idPasajero INT,
+    CHANGE COLUMN Survived Sobrevivió INT,
+    CHANGE COLUMN Pclass Clase CHAR,
+    CHANGE COLUMN Name Nombre VARCHAR( 100 ),
+    CHANGE COLUMN Sex Sexo VARCHAR( 10 ),
+    CHANGE COLUMN Age Edad VARCHAR( 4 ),
+    CHANGE COLUMN SibSp Familiares INT,
+    CHANGE COLUMN Parch PadresHijos INT,
+    CHANGE COLUMN Ticket idTicket VARCHAR( 50 ),
+    CHANGE COLUMN Fare Tarifa VARCHAR( 8 ),
+    CHANGE COLUMN Cabin idCabina VARCHAR( 20 ),
+    CHANGE COLUMN Embarked Embarque VARCHAR( 20 );
+    
+#-------------------------------------------------------------------------------------------------------------------
+#	CREACIÓN DE LAS TABLAS 'Pasajeros' y 'Adquiere' en función de los datos de la tabla inicial (CREATE + SELECT)
+#-------------------------------------------------------------------------------------------------------------------
+SET sql_mode='STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION';
+CREATE TABLE Pasajeros
+	SELECT idPasajero, Clase, idCabina, Nombre, Edad, Sexo, PadresHijos, Familiares, Sobrevivió, idTicket FROM Titanic_Datos;
+
+CREATE TABLE Adquiere 
+	SELECT idTicket, Tarifa, Embarque FROM Titanic_Datos GROUP BY 1;
+#-------------------------------------------------------------------------------------------------------------------
+#	ELIMINACIÓN DE LA TABLA 'Titanic_datos'
+#-------------------------------------------------------------------------------------------------------------------
+DROP TABLE Titanic_Datos;
+
+#-------------------------------------------------------------------------------------------------------------------
+#	MODIFICACIÓN DE LAS TABLAS: (Empieza Modificando Pasajeros)
+#		- Todos los datos no admiten valores nulos
+#		- Creación de las claves primarias de ambas tablas
+#		- Creación de la clave foránea entre dichas tablas
+#-------------------------------------------------------------------------------------------------------------------
+ALTER TABLE Pasajeros 
+	MODIFY idPasajero INT NOT NULL,
+    MODIFY Clase CHAR NOT NULL,
+    MODIFY idCabina VARCHAR( 20 ) NOT NULL,
+    MODIFY Nombre VARCHAR( 100 ) NOT NULL,
+    MODIFY Edad VARCHAR( 4 ) NOT NULL,
+    MODIFY Sexo VARCHAR( 10 ) NOT NULL,
+    MODIFY PadresHijos INT NOT NULL,
+    MODIFY Familiares INT NOT NULL,
+    MODIFY Sobrevivió INT NOT NULL,
+    MODIFY idTicket VARCHAR( 50 ) NOT NULL,
+	ADD PRIMARY KEY (idPasajero);
+    
+ALTER TABLE Adquiere 
+    MODIFY idTicket VARCHAR( 50 ) NOT NULL,
+    MODIFY Tarifa VARCHAR( 8 ) NOT NULL,
+    MODIFY Embarque VARCHAR( 20 ) NOT NULL,
+	ADD PRIMARY KEY (idTicket);
+
+ALTER TABLE Pasajeros
+	ADD FOREIGN KEY (idTicket) REFERENCES Adquiere ( idTicket );
+    
+#-------------------------------------------------------------------------------------------------------------------
+#	MODIFICACIÓN DEL TIPO DE DATOS VARCHAR() A TEXT
+#-------------------------------------------------------------------------------------------------------------------
+ALTER TABLE Pasajeros 
+    CHANGE COLUMN idCabina idCabina TEXT( 20 ),
+    CHANGE COLUMN Nombre Nombre TEXT ( 100 ),
+    CHANGE COLUMN Edad Edad TEXT ( 4 ),
+    CHANGE COLUMN Sexo Sexo TEXT ( 10 );
+
+ALTER TABLE Adquiere 
+    CHANGE COLUMN Tarifa Tarifa TEXT ( 8 ),
+    CHANGE COLUMN Embarque Embarque TEXT ( 20 );
+    
+#-------------------------------------------------------------------------------------------------------------------
+#	MODIFICACIÓN DEL Nombre de los pasajeros a ÚNICOS
+#-------------------------------------------------------------------------------------------------------------------
+ALTER TABLE Pasajeros
+	CHANGE COLUMN Nombre Nombre VARCHAR ( 100 ),
+	ADD UNIQUE KEY (Nombre);
+    
+#-------------------------------------------------------------------------------------------------------------------
+#	MODIFICACIÓN DE LA TABLA Pasajeros ESTABLECIENDO COMO VALOR POR DEFECTO EL 0 PARA LOS ATRIBUTOS PadresHijos y Familiares.
+#-------------------------------------------------------------------------------------------------------------------
+ALTER TABLE Pasajeros 
+	ALTER COLUMN Familiares SET DEFAULT 0;
+
+ALTER TABLE Pasajeros 
+	ALTER COLUMN PadresHijos SET DEFAULT 0;
+    
+#-------------------------------------------------------------------------------------------------------------------
+#	MODIFICACIÓN DE LA TABLA Pasajeros, CREANDO UN ÍNDICE SOBRE EL ATRIBUTO idCabina
+#-------------------------------------------------------------------------------------------------------------------
+ALTER TABLE Pasajeros
+	CHANGE COLUMN idCabina idCabina VARCHAR( 20 ),
+	ADD INDEX ( idCabina );
+    
+#-------------------------------------------------------------------------------------------------------------------
+#	MODIFICACIÓN EL NOMBRE DEL ATRIBUTO DE ENLACE DE LA CLAVE FORÁNEA DE idTicket a Billete
+#-------------------------------------------------------------------------------------------------------------------
+ALTER TABLE Pasajeros
+	DROP FOREIGN KEY pasajeros_ibfk_1,
+	RENAME KEY idTicket TO Billete,
+	ADD FOREIGN KEY (idTicket) REFERENCES Adquiere(idTicket); 
+
+#-------------------------------------------------------------------------------------------------------------------
+#	COMPROBACIÓN DE LOS VALORES DE ALGUNOS DE LOS ATRIBUTOS
+#-------------------------------------------------------------------------------------------------------------------
+ALTER TABLE Pasajeros 
+	ADD CHECK (Familiares>=0),
+	ADD CHECK (Sobrevivió IN (0,1)),
+	ADD CHECK (Edad>=0),
+	ADD CHECK (PadresHijos>=0);
+    
+ALTER TABLE Adquiere 
+	ADD CHECK (Tarifa>=0);
+#-------------------------------------------------------------------------------------------------------------------
+#	DICCIONARIO ASOCIADO
+#-------------------------------------------------------------------------------------------------------------------
+# digito = [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 ]
+# letra = [ mayúscula | minúscula ]
+# mayúscula = [ A - Z | Ñ ]
+# minúscula = [ a - z | ñ ]
+# Tildes = [Á, á, É, é, Í, í, Ó, ó, Ú, ú]
+# alfanum = [ letra | digito ]
+# Carácter_Válido = [ . | / ]
+# Nombre_Cliente = Apellido + Primer_Nombre + (Apodo)
+# Salida = (W./C. | C.A./SOTON |  P/PP | PC | SC/PARIS | CA. | S.O./P.P. | SOTON/O2 | C | A/4 | C.A. | WE/P | STON/O2. | F.C. | S.O.C. | LINE | SC/AH | A/5 | A./5. | A/4. | S.W./PP | SOTON/O.Q. | F.C.C. | W.E.P. | S.C./A.4.)
+#-------------------------------------------------------------------------------------------------------------------
+#	TABLA de Pasajeros
+#-------------------------------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------------------------------------------
+# Pasajeros = { Pasajeros }																									*Información de los pasajeros*
+# Pasajeros = @idPasajero + Clase + idCabina + Nombre + Edad + Sexo + PadresHijos + Familiares + Sobrevivió + idTicket		*Información de cada pasajero*
+# idPasajero = 1{digito}3																									*Clave numérica propia de la tabla Pasajero*
+# Sobrevivió = [ 0 | 1 ]																									*Número que puede ser 1 o 0 en función de si sobrevivió o no*
+# Clase = [ 1 | 2 | 3 ]																										*Valor que puede tomar 1, 2 o 3 en función de la clase elegida por cada pasajero*
+# Nombre = {Nombre_Cliente}																									*Nombre del Pasajero que adquirió los tickets*
+# Sexo = [ male | female ]																									*Determina el sexo del Pasajero*
+# Edad = 0{digito}2																											*Indica la edad de cada pasajero*
+# Familiares = 1{digito}1																									*Valor que te dice el número de familiares que van con el pasajero*
+# PadresHijos = 1{digito}1																									*Valor que te dice el número de Padres e hijos*
+# idTicket = {Salida} + 1{digito}6																							*Indica el puerto desde donde sale el pasajero*
+# idCabina = 0{mayúscula}1 + 0{digito}3																						*Identificador de la cabina del pasajero puediendo ser varias las que tiene*
+#-------------------------------------------------------------------------------------------------------------------
+#	TABLA de Adquiere
+#-------------------------------------------------------------------------------------------------------------------
+# Adquiere = { Adquiere }																									*Información de los tickets que adquiere el Pasajero*
+# Adquiere = @idTicket + Tarifa + Embarque																					*Información de cada Ticket*
+# idTicket = {Salida} + 1{digito}6																							*Indica el puerto desde donde sale el pasajero*
+# Tarifa = 0{digito}3 + ({Carácter_Válido} + 1{digito}4)																	*Determina la cantidad de dinero que costó el Ticket*
+# Embarque = 1{letra}1																										*Indica el lugar de Embarque por el que tiene que ir el Pasajero*
