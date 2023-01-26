@@ -2,7 +2,7 @@
 #	CREACIÓN DE LA BASE DE DATOS 'Titanic'
 #-------------------------------------------------------------------------------------------------------------------
 DROP DATABASE IF EXISTS Titanic;
-CREATE DATABASE IF NOT EXISTS Titanic;
+CREATE DATABASE Titanic;
 USE Titanic;
 #-------------------------------------------------------------------------------------------------------------------
 #	CREACIÓN DE LA TABLA -> copia la estructura inicial de la tabla (llamada 'mytable')
