@@ -18,7 +18,18 @@ USE Jardineria;
 #
 #		Clave primaria		oficinaID
 #--------------------------------------------------------------------------------------------
+CREATE TABLE oficina (
+  oficinaID TEXT,
+  ciudad TEXT ( 30 ) NOT NULL,
+  pais TEXT ( 50 ) NOT NULL,
+  region TEXT ( 50 ) NOT NULL,
+  CP TEXT ( 10 ) NOT NULL,
+  telefono TEXT ( 20 ) NOT NULL,
+  linea_direccion1 TEXT ( 50 ) NOT NULL,
+  linea_direccion2 TEXT ( 50 ) DEFAULT NULL,
 
+  PRIMARY KEY (oficinaID ( 10 ))
+  );
 #--------------------------------------------------------------------------------------------
 #	CREACIÓN DE LA TABLA 'empleado'
 #--------------------------------------------------------------------------------------------
@@ -36,7 +47,20 @@ USE Jardineria;
 #		clave foránea		oficina		enlace con la tabla oficina
 #		clave foránea		jefe		enlace con la tabla empleado		
 #--------------------------------------------------------------------------------------------
-
+CREATE TABLE empleado (
+  empleadoID INT,
+  nombre VARCHAR ( 50 ),
+  apellido1 VARCHAR ( 50 ),
+  apellido2	VARCHAR ( 50 ), 
+  extension VARCHAR ( 10 ),
+  email	VARCHAR ( 100 ),
+  oficina VARCHAR ( 10 ),
+  jefe INT NULL,
+  puesto VARCHAR ( 50 ),
+  
+  PRIMARY KEY ( empleadoID ),
+  FOREIGN KEY ( oficina ) REFERENCES oficina ( oficinaID )
+  );
 #--------------------------------------------------------------------------------------------
 #	CREACIÓN DE LA TABLA 'gama_producto'
 #--------------------------------------------------------------------------------------------
@@ -47,7 +71,14 @@ USE Jardineria;
 #
 #		Clave primaria		gama
 #--------------------------------------------------------------------------------------------
-
+CREATE TABLE gama_producto (
+	gama VARCHAR ( 50 ),
+    descripcion_texto TEXT,
+    descripcion_html TEXT,
+    imagen VARCHAR ( 256 ),
+    
+    PRIMARY KEY ( gama )
+    );
 #--------------------------------------------------------------------------------------------
 #	CREACIÓN DE LA TABLA 'cliente'
 #--------------------------------------------------------------------------------------------
@@ -69,7 +100,25 @@ USE Jardineria;
 #		Clave primaria		clienteID
 #		clave foránea		representante_ventas	enlace con la tabla empleado		
 #--------------------------------------------------------------------------------------------
-
+CREATE TABLE cliente(
+	clienteID INT,
+	nombre_cliente VARCHAR ( 50 ),
+    nombre_cliente VARCHAR ( 30 ),
+    apellido_contacto VARCHAR ( 50 ),
+    telefono VARCHAR ( 15 ),
+    fax VARCHAR ( 15 ),
+    linea_direccion1 VARCHAR ( 50 ),
+    linea_direccion2 VARCHAR ( 50 ),
+    ciudad VARCHAR ( 50 ),
+    region VARCHAR ( 50 ),
+    pais VARCHAR ( 50 ),
+    CP VARCHAR ( 10 ),
+    representante_ventas INT,
+    limite_credito DECIMAL ( 15, 2 ),
+    
+    PRIMARY KEY ( clienteID ),
+    FOREIGN KEY ( representante_ventas ) REFERENCES empleado ( empleadoID )
+);
 #--------------------------------------------------------------------------------------------
 #	CREACIÓN DE LA TABLA 'pedido'
 #--------------------------------------------------------------------------------------------
@@ -84,7 +133,18 @@ USE Jardineria;
 #		Clave primaria		pedidoID
 #		clave foránea		cliente		enlace con la tabla cliente
 #--------------------------------------------------------------------------------------------
+CREATE TABLE pedido (
+	pedidoID INT,
+	fecha_pedido DATE,
+	fecha_esperada DATE,
+	fecha_entrega DATE NULL,
+	estado VARCHAR ( 15 ),
+	comentarioa TEXT,
+	cliente INT NOT NULL,
 
+PRIMARY KEY ( pedidoID ),
+FOREIGN KEY ( cliente ) REFERENCES cliente ( clienteID ) 
+);
 #--------------------------------------------------------------------------------------------
 #	CREACIÓN DE LA TABLA 'PRODUCTO'
 #--------------------------------------------------------------------------------------------
@@ -101,7 +161,20 @@ USE Jardineria;
 #		Clave primaria		productoID
 #		clave foránea		gama		enlace con la tabla gama_producto
 #--------------------------------------------------------------------------------------------
-
+CREATE TABLE PRODUCTO(
+	productoID VARCHAR ( 15 ),
+	nombre VARCHAR ( 70 ),
+    gama VARCHAR ( 50 ),
+    dimensiones VARCHAR ( 25 ) NULL,
+    proveedor VARCHAR ( 50 ) NULL,
+    descripcion TEXT NULL,
+    cantidad_en_stock TINYINT NOT NULL,
+    precio_venta DECIMAL ( 15, 2 ),
+    precio_proveedor DECIMAL ( 15, 2 ),
+    
+    PRIMARY KEY ( productoID ),
+    FOREIGN KEY ( gama ) REFERENCES gama_producto ( gama )
+);
 #--------------------------------------------------------------------------------------------
 #	CREACIÓN DE LA TABLA 'detalle_pedido'
 #--------------------------------------------------------------------------------------------
@@ -115,7 +188,17 @@ USE Jardineria;
 #		Clave foránea		pedidoID		enalce con la tabla pedido
 #		Clave foránea		productoID		enlace con la tabla producto
 #--------------------------------------------------------------------------------------------
-
+CREATE TABLE (
+	pedidoID INT,
+    productoID VARCHAR ( 15 ),
+    cantidad INT, 
+    precio_unidad DECIMAL ( 15, 2 ),
+    linea TINYINT NOT NULL,
+    
+    PRIMARY KEY ( pedidoID, productoID ),
+    FOREIGN KEY ( pedidoID ) REFERENCES pedido ( pedidoID ),
+    FOREIGN KEY ( productoID ) REFERENCES producto ( productoID )
+    );
 #--------------------------------------------------------------------------------------------
 #	CREACIÓN DE LA TABLA 'pago'
 #--------------------------------------------------------------------------------------------
@@ -128,7 +211,16 @@ USE Jardineria;
 #		Clave primaria		clienteID, transaccion
 #		clave foránea		clienteID		enlace con la tabla cliente
 #--------------------------------------------------------------------------------------------
-
+CREATE TABLE pago(
+	clienteID INT,
+    forma_pago VARCHAR ( 40 ),
+    transaccion VARCHAR ( 50 ),
+    fecha_pago DATE NULL,
+    total DECIMAL ( 15, 2 ),
+    
+    PRIMARY KEY ( clienteID, transaccion ),
+    FOREIGN KEY ( clienteID ) REFERENCES cliente ( clienteID)
+    );
 #--------------------------------------------------------------------------------------------
 #	DICCIONARIO DE DATOS
 #--------------------------------------------------------------------------------------------
