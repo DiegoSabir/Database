@@ -63,13 +63,13 @@ CREATE TABLE Jugadores(
 #		Clave primaria		temporada, jugador
 #		Clave foránea		jugador				a la tabla 'Jugadores'
 #--------------------------------------------------------------------------------------------
-CREATE TABLE Estadísticas(
+CREATE TABLE Estadisticas(
 	temporada VARCHAR ( 5 ) NOT NULL,
     jugador INT NOT NULL,
     PuntoXPartido FLOAT DEFAULT NULL,
     AsistenciaXPartido FLOAT DEFAULT NULL,
-    TaponesXPartido FLOAT DEFAULT NULL,
-    ReboterXPartido FLOAT DEFAULT NULL,
+    TaponXPartido FLOAT DEFAULT NULL,
+    ReboteXPartido FLOAT DEFAULT NULL,
     
     PRIMARY KEY ( temporada, jugador ),
     FOREIGN KEY ( jugador ) REFERENCES Jugadores ( codigo )
