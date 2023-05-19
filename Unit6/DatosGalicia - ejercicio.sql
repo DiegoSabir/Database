@@ -30,29 +30,9 @@
 #------------------------------------------------------------------------
 #	CREAMOS DOS TABLAS (Datos_Modificados Y Datos_Borrados) CON LA MISMA ESTRUCTURA QUE LA TABLA Datos
 #------------------------------------------------------------------------
-    CREATE TABLE DatosModificados(
-	idDatos		INT	AUTO_INCREMENT,
-    Provincia 	VARCHAR ( 20 ),
-    Comarca 	VARCHAR ( 30 ),
-    Concello 	VARCHAR ( 30 ),
-    Superficie 	FLOAT,
-    Mujeres 	INT,
-    Hombres 	INT,
+CREATE TABLE DatosModificados LIKE Datos;
     
-    PRIMARY KEY (idDatos)
-    );
-    
-    CREATE TABLE DatosBorrados(
-	idDatos		INT	AUTO_INCREMENT,
-    Provincia 	VARCHAR ( 20 ),
-    Comarca 	VARCHAR ( 30 ),
-    Concello 	VARCHAR ( 30 ),
-    Superficie 	FLOAT,
-    Mujeres 	INT,
-    Hombres 	INT,
-    
-    PRIMARY KEY (idDatos)
-    );
+CREATE TABLE DatosBorrados LIKE Datos;
 #------------------------------------------------------------------------
 #	AGREGAMOS TODOS LOS DATOS
 #------------------------------------------------------------------------
@@ -375,6 +355,7 @@ INSERT INTO Datos ( Provincia, Comarca, Concello, Superficie, Mujeres, Hombres )
 #------------------------------------------------------------------------
 #	PROCEDIMIENTO PARA CORREGIR LA SUPERFICIE DE UN CONCELLO Y EL NUEVO VALOR LO PASAMOS COMO PARÁMETRO
 #------------------------------------------------------------------------
+DROP PROCEDURE IF EXISTS actualizarSuperficie;
 DELIMITER //
 CREATE PROCEDURE actualizarSuperficie (IN newConcello VARCHAR ( 30 ), IN newSuperficie FLOAT)
 BEGIN
@@ -384,10 +365,11 @@ BEGIN
 END //
 DELIMITER ;
 
-CALL actualizarSuperficie('Vigo', 109.1);
+CALL actualizarSuperficie('Vigo', 109);
 #------------------------------------------------------------------------
 #	PROCEDIMIENTO PARA BORRAR LOS CONCELLOS CUYA SUPERFICIE OSCILE ENTRE UNOS VALORE MÍNIMO Y MÁXIMO PASADOS COMO PARÁMETROS
 #------------------------------------------------------------------------
+DROP PROCEDURE IF EXISTS eliminarConcellosPorSuperficie;
 DELIMITER //
 CREATE PROCEDURE eliminarConcellosPorSuperficie (IN minSuperficie FLOAT, IN maxSuperficie FLOAT)
 BEGIN
@@ -400,6 +382,7 @@ CALL eliminarConcellosPorSuperficie(50.00, 100.00);
 #------------------------------------------------------------------------
 #	FUNCIÓN QUE DEVUELVA LA SUMA DE LAS DIFERENCIAS ENTRE MUJERES Y HOMBRES DE UNA DETERMINADA COMARCA PASADA COMO PARÁMETRO
 #------------------------------------------------------------------------
+DROP FUNCTION IF EXISTS diferenciaTotalMujeresHombres;
 DELIMITER //
 CREATE FUNCTION diferenciaTotalMujeresHombres (ComarcaNombre VARCHAR ( 30 ))
 RETURNS INT
@@ -408,7 +391,7 @@ READS SQL DATA
 BEGIN
 	DECLARE diferenciaTotal INT;
     
-    SELECT SUM(ABS(Mujeres - Hombres) INTO diferenciaTotal
+    SELECT SUM(ABS(Mujeres - Hombres)) INTO diferenciaTotal
     FROM Datos
     WHERE Comarca = ComarcaNombre;
     RETURN diferenciaTotal;
@@ -419,21 +402,67 @@ SELECT diferenciaTotalMujeresHombres('Muros');
 #------------------------------------------------------------------------
 #	FUNCIÓN QUE DEVUELVA LA SUPERFICE MEDIA DE LOS CONCELLOS DE UNA DETERMINADA COMARCA PASADA COMO PARÁMETRO
 #------------------------------------------------------------------------
-
+DROP FUNCTION IF EXISTS superficieMedia;
+Delimiter //
+CREATE FUNCTION SuperficieMedia (ComarcaNombre VARCHAR (30))
+RETURNS FLOAT
+DETERMINISTIC
+BEGIN
+	DECLARE superficieMedia FLOAT;
+    SELECT AVG (Superficie) INTO superficieMedia FROM Datos WHERE Comarca = ComarcaNombre;
+    RETURN superficieMedia;
+END //
+Delimiter ;
+SELECT SuperficieMedia('Muros');
 #------------------------------------------------------------------------
 #	TRIGGER PARA QUE CADA VEZ QUE MODIFIQUEMOS UN DATO GUARDE EL VALOR ANTERIOR EN LA TABLA Datos_Modificados
 #------------------------------------------------------------------------
+DROP TRIGGER IF EXISTS DatosModificados;
+Delimiter //
+CREATE TRIGGER DatosModificados BEFORE UPDATE ON Datos FOR EACH ROW
+BEGIN
+	INSERT INTO DatosModificados (Provincia, Comarca, Concello, Superficie, Mujeres, Hombres)
+    VALUES (OLD.Provincia, OLD.Comarca, OLD.Concello, OLD.Superficie, OLD.Mujeres, OLD.Hombres);
+END //
+Delimiter ;
 
+UPDATE Datos SET Superficie = '200' WHERE idDatos = 100;
 #------------------------------------------------------------------------
 #	TRIGGER PARA QUE CADA VEZ QUE BORREMOS UNA TUPLA LA GUARDE EN LA TABLA Datos_Borrados
 #------------------------------------------------------------------------
+DROP TRIGGER IF EXISTS DatosBorrados;
+Delimiter //
+CREATE TRIGGER DatosBorrados BEFORE DELETE ON Datos FOR EACH ROW
+BEGIN
+	INSERT INTO DatosEliminados (idDatos, Provincia, Comarca, Concello, Superficie, Mujeres, Hombres)
+	VALUES (OLD.idDatos, OLD.Provincia, OLD.Comarca, OLD.Concello, OLD.Superficie, OLD.Mujeres, OLD.Hombres);
+END //
+Delimiter ;
 
+DELETE FROM DATOS WHERE idDatos = 5;
 #------------------------------------------------------------------------
 #	PROCEDIMIENTO PARA RESTAURAR TODOS LOS DATOS ELIMINADOS
 #------------------------------------------------------------------------
+DROP PROCEDURE IF EXISTS RestauracionDatos;
+Delimiter //
+CREATE PROCEDURE RestauracionDatos()
+BEGIN
+	INSERT INTO Datos (idDatos, Provincia, Comarca, Concello, Superficie, Mujeres, Hombres)
+    SELECT idDatos, Provincia, Comarca, Concello, Superficie, Mujeres, Hombres FROM DatosBorrados;
+END //
+Delimiter ;
 
+CALL RestauracionDatos();
 #------------------------------------------------------------------------
 #	PROCEDIMIENTO PARA LIMPIAR LA TABLA Datos_Borrados
 #------------------------------------------------------------------------
+DROP PROCEDURE IF EXISTS Limpieza;
+Delimiter //
+CREATE PROCEDURE Limpieza()
+BEGIN
+    DELETE FROM DatosBorrados;
+END //
+Delimiter ;
 
+CALL Limpieza();
 #------------------------------------------------------------------------
